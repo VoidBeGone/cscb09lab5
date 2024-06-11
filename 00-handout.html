@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      lang="en"
+      xml:lang="en"
+>
+<head>
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes" />
+<title>B09 Lab week 6</title>
+<style type="text/css">
+h1, h2, h3 { color: blue; }
+dfn { font-style: normal; font-weight: bold; color: blue; }
+table { border-collapse: collapse; }
+th, td { border: 1px solid grey; padding: 0.2em 0.5em; }
+
+/* Code excerpts from loadable source files. */
+div.excerpt {
+  margin: 1em 0em 1em; /* top, left/right, bottom */
+}
+div.excerpt > span {
+  font-size: smaller;
+  background-color: #f0f0f0;
+  padding: 0.25em;
+}
+div.excerpt > pre {
+  background-color: #f0f0f0;
+  overflow: auto;
+  padding: 0.5em;
+  margin: 0px;
+}
+
+/* popup hidable table of contents, and the button to pop it up. */
+#tocdyn {
+  position: fixed;
+  width: 15em;
+  top: 0;
+  right: 0;
+  padding: 8px;
+  border-left: blue solid 1px;
+  border-bottom: blue solid 1px;
+  background-color: white;
+  color: black;
+  font-family: sans-serif;
+  visibility: hidden; /* initial value, to be overruled by javascript */
+}
+#tocbutton {
+  position: fixed;
+  top: 0;
+  right: 0;
+  opacity: 0.9;
+}
+#tocdyn > h1 {
+  font-size: 1em;
+  font-weight: bold;
+  margin-top: 0;
+}
+#tocdyn * {
+  text-align: left;
+}
+#tocdyn ul {
+  list-style-type: none;
+}
+#tocdyn > ul {
+  padding-left: 0;
+}
+#tocdyn > ul ul {
+  padding-left: 1em;
+}
+#tocdyn li {
+  margin-top: 0.3em;
+  margin-bottom: 0.3em;
+}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+ul.task-list{list-style: none;}
+</style>
+<script type="text/javascript">
+function show_toc() {
+  document.getElementById("tocdyn").style.visibility = "visible";
+}
+function hide_toc() {
+  document.getElementById("tocdyn").style.visibility = "";
+}
+</script>
+</head>
+<body id="top">
+<header class="title">
+<h1 class="title">B09 Lab week 6</h1>
+</header>
+<div id="tocbutton"><button type="button" onclick="show_toc();">Table of Contents</button></div>
+<nav id="tocdyn" role="doc-toc" onclick="hide_toc();">
+<p><a href="#top">Top</a></p>
+<ul>
+<li><a href="#binary">Binary</a></li>
+<li><a href="#free-formatted">Free-Formatted</a></li>
+<li><a href="#testing-and-handing-in">Testing And Handing In</a></li>
+</ul>
+</nav>
+<p>This lab is an exercise on file I/O in C, including opening, closing,
+binary I/O, formatted input, and detecting how much valid data you
+actually get.</p>
+<p>Starter file saveload.c is provided, along with support files and
+sample inputs.</p>
+<p>A struct <code>point</code> is defined in point.h; here it is
+again:</p>
+<pre><code>typedef struct point {
+  int x, y;
+} point;</code></pre>
+<p>Your job is to implement the following functions for writing and
+reading an array of these points to/from a file, given pathname, array
+address, and how many points. There are a binary version and a formatted
+(human-readable) version.</p>
+<pre><code>// write and read binary
+ssize_t save_points(const char *pathname, const point *a, size_t n);
+ssize_t load_points(const char *pathname, point *a, size_t n);
+
+// read free-formatted
+ssize_t scan_points(const char *pathname, point *a, size_t n);</code></pre>
+<p>In all cases, <code>n</code> is how many points to write/read,
+<code>a</code> is the address of the array of points. You may assume
+that the array is large enough.</p>
+<p>In the reading cases, read <code>n</code> complete points or as many
+as possible, whichever happens first. There are extra elaborations
+below.</p>
+<p>Assumptions and responsibilities for all functions:</p>
+<ul>
+<li>If opening is successful, the return value is the number of complete
+points actually written/read. Else, the return value is -1.</li>
+<li>If opening is successful, you are responsible for closing.</li>
+<li>The write function may only assume permission for writing. The read
+functions may only assume permission for reading.</li>
+<li>You are not responsible for other failure modes.</li>
+<li>Error messages and debugging messages are optional and may go to
+stderr (will not affect auto-marking).</li>
+</ul>
+<h2 id="binary">Binary</h2>
+<p>A single use of <code>fwrite()</code> or <code>fread()</code>
+suffices to conform to the binary format if used correctly.</p>
+<p>The only scenerio you need to handle when reading does not get n
+complete points is when the file is too small. But it is trivial to find
+out from the return value of <code>fread()</code>.</p>
+<p>You can use the <a
+href="https://www.gnu.org/software/coreutils/manual/html_node/od-invocation.html"><code>od</code></a>
+program to visualize binary files. The option <code>-t dI</code>
+(interpret every 4 bytes as an int) is most suitable for this lab,
+e.g.,</p>
+<pre><code>od -t dI sample-binary</code></pre>
+<p>The sample file sample-binary has 3 points: (3, -14), (-5, 7), (45,
+-34).</p>
+<h2 id="free-formatted">Free-Formatted</h2>
+<p>For <code>scan_points()</code>, the format is: Each point is 2
+integers in the order x, y; integer is as in <code>%d</code>; integers
+and points are separated by spaces and/or newlines; spaces and newlines
+can also appear before and after. Such spacing rules should be trivial
+to handle if you truly understand <code>fscanf()</code>.</p>
+<p>The scenerios you need to handle when fewer than n complete points
+can be read are:</p>
+<ul>
+<li>There are not enough data.</li>
+<li>There are invalid data, e.g., letters. (Except: Ignore invalid data
+after n complete points.)</li>
+</ul>
+<p>In those cases, read until you encounter end of file or invalid data
+before completing one point. Disregard the incomplete point (and any
+remaining data). If you understand the return value of
+<code>fscanf()</code>, it should be easy to know when to stop.</p>
+<p>The sample file sample-free.txt is an example of having at most 3
+complete points; afterwards it’s an incomplete point and invalid
+data.</p>
+<h2 id="testing-and-handing-in">Testing And Handing In</h2>
+<p>Please hand in a completed saveload.c only. Please do not put
+<code>main()</code> in it.</p>
+<p>Please make your own C file for tests and <code>main()</code>, like
+in basictest.c. Then you can compile by, e.g.,</p>
+<pre><code>gcc -O2 -Wall saveload.c basictest.c</code></pre>
+<p>(Auto-marking will compile with <code>-O2 -Wall</code>.)</p>
+</body>
+</html>
